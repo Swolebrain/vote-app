@@ -1,67 +1,61 @@
 const ProductList = React.createClass({
   getInitialState: function() {
     return {
-      products: [],
+      products: Data,
+      sort: 'desc'
     };
   },
-  componentDidMount: function() {
-    this.updateState();
+  switchSort: function(){
+    let newDir = this.state.sort === 'desc' ? 'asc' : 'desc';
+    this.setState({products: this.state.products, sort: newDir});
   },
-  updateState: function() {
-     const products = Data.sort((a, b) => {
-     return b.votes - a.votes;
-  });
-    this.setState({products: products});
-  },
-  handleProductUpVote: function(productId) {
-    Data.forEach((el) => {
+  handleVote: function(productId, sign) {
+    let newProducts = this.state.products.map((el) => {
       if (el.id === productId) {
-        el.votes = el.votes + 1;
-        return;
+        return Object.assign({}, el, {votes: el.votes+sign});
       }
+      else return el;
     });
-    this.updateState();
-  },
-  handleProductDownVote: function(productId) {
-    Data.forEach((el) => {
-      if (el.id === productId) {
-        el.votes = el.votes - 1;
-        return;
-      }
-    });
-    this.updateState();
+    this.setState({products: newProducts, sort: this.state.sort});
   },
   render: function() {
-    const products = this.state.products.map((product) => {
+    let sortedProducts;
+    if (this.state.sort === 'desc')
+      sortedProducts = this.state.products.concat().sort( (a,b) => b.votes-a.votes);
+    else
+      sortedProducts = this.state.products.concat().sort( (a,b) => a.votes-b.votes);
+    const products = sortedProducts.map((product) => {
     return (
         <Product
           key={'product' + product.id}
-          id={product.id} 
+          id={product.id}
           title={product.title}
           description={product.description}
           url={product.url}
           votes={product.votes}
           submitter_avatar_url={product.submitter_avatar_url}
           product_image_url={product.product_image_url}
-          onUpVote={this.handleProductUpVote}
-          onDownVote={this.handleProductDownVote}
+          onVote={this.handleVote}
         />
     );
   });
     return (
+      <div>
+        <div onClick={this.switchSort}>{this.state.sort}</div>
         <div className="ui items">
           {products}
-        </div>    
+        </div>
+      </div>
     );
   },
 });
 
 const Product = React.createClass({
   handleUpVote: function() {
-    this.props.onUpVote(this.props.id);
+    this.props.onVote(this.props.id, +1);
   },
   handleDownVote: function() {
-    this.props.onDownVote(this.props.id);
+    this.props.onVote(this.props.id, -1);
   },
   render: function() {
     return (
